@@ -1,4 +1,4 @@
-package auth
+package configuration
 
 import (
 	"os"
@@ -7,7 +7,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func configurationDir() (string, error) {
+const gdriverFolder = ".gdriver"
+
+func Dir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", errors.Wrap(err, "reading user home directory failed")

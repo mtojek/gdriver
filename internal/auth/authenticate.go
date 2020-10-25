@@ -2,10 +2,8 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
+	"net/http"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -14,32 +12,16 @@ import (
 )
 
 func Authenticate(newCredentialsFile string) error {
-	configDir, err := configurationDir()
-	if err != nil {
-		return errors.Wrap(err, "reading configuration directory failed")
-	}
-
-	credentialsPath := filepath.Join(configDir, credentialsFile)
 	if newCredentialsFile != "" {
-		c, err := ioutil.ReadFile(newCredentialsFile)
+		err := writeCredentialsFile(newCredentialsFile)
 		if err != nil {
-			return errors.Wrap(err, "reading new credentials file failed")
-		}
-
-		err = ioutil.WriteFile(credentialsPath, c, 0644)
-		if err != nil {
-			return errors.Wrap(err, "writing credentials file failed")
+			return errors.Wrap(err, "importing credentials failed")
 		}
 	}
 
-	credentialsBody, err := ioutil.ReadFile(credentialsPath)
+	config, err := clientConfig()
 	if err != nil {
-		return errors.Wrap(err, "reading credentials file failed. Use --import-credentials option.")
-	}
-
-	config, err := google.ConfigFromJSON(credentialsBody, drive.DriveReadonlyScope)
-	if err != nil {
-		return errors.Wrap(err, "parsing config file failed")
+		return errors.Wrap(err, "reading client config failed")
 	}
 
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
@@ -57,16 +39,45 @@ func Authenticate(newCredentialsFile string) error {
 		return errors.Wrap(err, "exchanging authorization code for token failed")
 	}
 
-	tokenBody, err := json.Marshal(authorizationToken)
-	if err != nil {
-		return errors.Wrap(err, "marshaling authorization token failed")
-	}
-
-	err = ioutil.WriteFile(filepath.Join(configDir, tokenFile), tokenBody, 0644)
+	err = writeTokenFile(authorizationToken)
 	if err != nil {
 		return errors.Wrap(err, "writing token file failed")
 	}
 
 	fmt.Println("Done.")
 	return nil
+}
+
+func Client() (*http.Client, error) {
+	token, err := readTokenFile()
+	if err != nil {
+		return nil, errors.Wrap(err, "reading token file failed")
+	}
+
+	c, err := clientConfig()
+	if err != nil {
+		return nil, errors.Wrap(err, "creating client config failed")
+	}
+	return c.Client(context.Background(), token), nil
+}
+
+func Verify() error {
+	_, err := readTokenFile()
+	if err != nil {
+		return errors.Wrap(err, "user hasn't been authenticated")
+	}
+	return nil
+}
+
+func clientConfig() (*oauth2.Config, error) {
+	credentialsBody, err := readCredentialsFile()
+	if err != nil {
+		return nil, errors.Wrap(err, "reading credentials file filed")
+	}
+
+	config, err := google.ConfigFromJSON(credentialsBody, drive.DriveReadonlyScope)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing config file failed")
+	}
+	return config, nil
 }

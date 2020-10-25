@@ -54,8 +54,8 @@ func Root() *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:   "gdriver",
-		Short: "Manage large files in Google Drive",
-		Long:  "Use gdriver to manage large files in Google Drive",
+		Short: "Download large files from Google Drive",
+		Long:  "Use gdriver to download large files from Google Drive",
 	}
 	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(downloadCmd)
