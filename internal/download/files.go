@@ -29,9 +29,10 @@ func Files(folderID, outputDir string) error {
 	}
 	fmt.Println(driveService)
 
+	// TODO folderID as resourceID, selection mode
 	// TODO List all files (next token) in the given folder (flat)
 	// TODO For every file:
-	// TODO 	Check if local file exists
+	// TODO 	Check if local file exists in output directory
 	// TODO 	Check MD5 remote vs local file
 	// TODO 	Check if size(local file) < size(remote local)
 	return nil
