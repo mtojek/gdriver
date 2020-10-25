@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mtojek/gdriver/internal/auth"
+	"github.com/mtojek/gdriver/internal/download"
 )
 
 func Root() *cobra.Command {
@@ -36,7 +37,16 @@ func Root() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var folderID string
+			if len(args) > 0 {
+				folderID = args[0]
+			}
 
+			outputPath, _ := cmd.Flags().GetString("output")
+			err := download.Files(folderID, outputPath)
+			if err != nil {
+				return errors.Wrap(err, "downloading files failed")
+			}
 			return nil
 		},
 	}
