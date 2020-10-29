@@ -54,8 +54,7 @@ func Files(folderID, outputDir string) error {
 		fmt.Println(aFile.Path)
 	}
 
-	// TODO folderID as resourceID, selection mode
-	// TODO List all files (next token) in the given folder (flat)
+	// TODO Selection mode
 	// TODO For every file:
 	// TODO 	Check if local file exists in output directory
 	// TODO 	Check MD5 remote vs local file
