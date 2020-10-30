@@ -3,12 +3,16 @@ package download
 import (
 	"context"
 	"fmt"
-	"github.com/mtojek/gdriver/internal/auth"
+	"os"
+	"path/filepath"
+
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
-	"os"
-	"path/filepath"
+
+	"github.com/mtojek/gdriver/internal/auth"
 )
 
 type structuredFile struct {
@@ -16,8 +20,25 @@ type structuredFile struct {
 	*drive.File
 }
 
-func Files(folderID, outputDir string) error {
-	err := checkOutputDir(outputDir)
+type structuredFiles []*structuredFile
+
+func (files structuredFiles) String() []string {
+	var labels []string
+	for _, aFile := range files {
+		labels = append(labels, fmt.Sprintf("%s (%s)", aFile.Path, humanize.Bytes(uint64(aFile.Size))))
+	}
+	return labels
+}
+
+type FilesOptions struct {
+	FolderID  string
+	OutputDir string
+
+	SelectionMode bool
+}
+
+func Files(options FilesOptions) error {
+	err := checkOutputDir(options.OutputDir)
 	if err != nil {
 		return err
 	}
@@ -33,28 +54,38 @@ func Files(folderID, outputDir string) error {
 	}
 
 	// If a resource path is provided, check if it refers to a folder.
-	if folderID != "" {
-		aFile, err := driveService.Files.Get(folderID).Do()
+	if options.FolderID != "" {
+		aFile, err := driveService.Files.Get(options.FolderID).Do()
 		if err != nil {
-			return errors.Wrapf(err, "can't read folder data (ID: %s)", folderID)
+			return errors.Wrapf(err, "can't read folder data (ID: %s)", options.FolderID)
 		}
 
 		if aFile.MimeType != "application/vnd.google-apps.folder" {
-			return errors.Wrapf(err, "resource is not a folder (ID: %s)", folderID)
+			return errors.Wrapf(err, "resource is not a folder (ID: %s)", options.FolderID)
 		}
 	}
 
 	// List files in the folder.
-	files, err := listFiles(driveService, folderID, "/")
+	files, err := listFiles(driveService, options.FolderID, "/")
 	if err != nil {
 		return errors.Wrap(err, "listing files failed")
 	}
 
-	for _, aFile := range files {
-		fmt.Println(aFile.Path)
+	if options.SelectionMode {
+		// Select files to download.
+		fileSelectPrompt := &survey.MultiSelect{
+			Message:  "Which files would you like to download?",
+			Options:  files.String(),
+			PageSize: 100,
+		}
+
+		var selected []string
+		err = survey.AskOne(fileSelectPrompt, &selected, survey.WithValidator(survey.Required))
+		if err != nil {
+			return errors.Wrap(err, "file selection prompt failed")
+		}
 	}
 
-	// TODO Selection mode
 	// TODO For every file:
 	// TODO 	Check if local file exists in output directory
 	// TODO 	Check MD5 remote vs local file
@@ -74,7 +105,7 @@ func checkOutputDir(outputDir string) error {
 	return nil
 }
 
-func listFiles(driveService *drive.Service, folderID, path string) ([]*structuredFile, error) {
+func listFiles(driveService *drive.Service, folderID, path string) (structuredFiles, error) {
 	var files []*structuredFile
 	var nextPageToken string
 	for {

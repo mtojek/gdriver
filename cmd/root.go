@@ -43,7 +43,12 @@ func Root() *cobra.Command {
 			}
 
 			outputPath, _ := cmd.Flags().GetString("output")
-			err := download.Files(folderID, outputPath)
+			selectionMode, _ := cmd.Flags().GetBool("select")
+			err := download.Files(download.FilesOptions{
+				FolderID:      folderID,
+				OutputDir:     outputPath,
+				SelectionMode: selectionMode,
+			})
 			if err != nil {
 				return errors.Wrap(err, "downloading files failed")
 			}
@@ -51,6 +56,7 @@ func Root() *cobra.Command {
 		},
 	}
 	downloadCmd.Flags().String("output", ".", "Output folder for downloaded resources")
+	downloadCmd.Flags().Bool("select", false, "Select files to download")
 
 	rootCmd := &cobra.Command{
 		Use:   "gdriver",
