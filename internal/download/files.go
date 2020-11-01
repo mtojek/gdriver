@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/dustin/go-humanize"
@@ -76,7 +77,7 @@ func Files(options FilesOptions) error {
 		fileSelectPrompt := &survey.MultiSelect{
 			Message:  "Which files would you like to download?",
 			Options:  files.String(),
-			PageSize: 100,
+			PageSize: 20,
 		}
 
 		var selected []string
@@ -129,20 +130,23 @@ func listFiles(driveService *drive.Service, folderID, path string) (structuredFi
 		}
 
 		for _, aFile := range fileList.Files {
-			if aFile.MimeType != "application/vnd.google-apps.folder" {
-				files = append(files, &structuredFile{
-					File: aFile,
-					Path: filepath.Join(path, aFile.Name),
-				})
+			if aFile.MimeType == "application/vnd.google-apps.folder" {
+				fs, err := listFiles(driveService, aFile.Id, filepath.Join(path, aFile.Name))
+				if err != nil {
+					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", aFile.Id)
+				}
+				files = append(files, fs...)
 				continue
 			}
 
-			fs, err := listFiles(driveService, aFile.Id, filepath.Join(path, aFile.Name))
-			if err != nil {
-				return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", aFile.Id)
+			if strings.HasPrefix(aFile.MimeType, "application/vnd.google-apps.") {
+				continue // skip Google Docs
 			}
 
-			files = append(files, fs...)
+			files = append(files, &structuredFile{
+				File: aFile,
+				Path: filepath.Join(path, aFile.Name),
+			})
 		}
 
 		nextPageToken = fileList.NextPageToken
