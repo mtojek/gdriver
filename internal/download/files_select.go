@@ -16,7 +16,7 @@ func selectFilesToDownload(files driveFiles) (driveFiles, error) {
 	var selected []string
 	err := survey.AskOne(fileSelectPrompt, &selected, survey.WithValidator(survey.Required))
 	if err != nil {
-		return nil, errors.Wrap(err, "file selection prompt failed")
+		return nil, errors.Wrap(err, "prompt failed")
 	}
 
 	files = filterSelectedFiles(files, selected)
