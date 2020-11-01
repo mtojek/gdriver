@@ -16,17 +16,21 @@ import (
 	"github.com/mtojek/gdriver/internal/auth"
 )
 
-type structuredFile struct {
+type driveFile struct {
 	Path string
 	*drive.File
 }
 
-type structuredFiles []*structuredFile
+func (df *driveFile) String() string {
+	return fmt.Sprintf("%s (%s)", df.Path, humanize.Bytes(uint64(df.Size)))
+}
 
-func (files structuredFiles) String() []string {
+type driveFiles []*driveFile
+
+func (files driveFiles) String() []string {
 	var labels []string
 	for _, aFile := range files {
-		labels = append(labels, fmt.Sprintf("%s (%s)", aFile.Path, humanize.Bytes(uint64(aFile.Size))))
+		labels = append(labels, aFile.String())
 	}
 	return labels
 }
@@ -85,6 +89,8 @@ func Files(options FilesOptions) error {
 		if err != nil {
 			return errors.Wrap(err, "file selection prompt failed")
 		}
+
+		files = filterSelectedFiles(files, selected)
 	}
 
 	// TODO For every file:
@@ -106,8 +112,8 @@ func checkOutputDir(outputDir string) error {
 	return nil
 }
 
-func listFiles(driveService *drive.Service, folderID, path string) (structuredFiles, error) {
-	var files []*structuredFile
+func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, error) {
+	var files []*driveFile
 	var nextPageToken string
 	for {
 		q := "trashed = false"
@@ -143,7 +149,7 @@ func listFiles(driveService *drive.Service, folderID, path string) (structuredFi
 				continue // skip Google Docs
 			}
 
-			files = append(files, &structuredFile{
+			files = append(files, &driveFile{
 				File: aFile,
 				Path: filepath.Join(path, aFile.Name),
 			})
@@ -155,4 +161,16 @@ func listFiles(driveService *drive.Service, folderID, path string) (structuredFi
 		}
 	}
 	return files, nil
+}
+
+func filterSelectedFiles(files driveFiles, selected []string) driveFiles {
+	var filtered []*driveFile
+	for _, s := range selected {
+		for _, aFile := range files {
+			if aFile.String() == s {
+				filtered = append(filtered, aFile)
+			}
+		}
+	}
+	return filtered
 }
