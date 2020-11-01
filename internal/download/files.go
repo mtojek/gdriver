@@ -4,10 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
 	"google.golang.org/api/drive/v3"
@@ -70,27 +67,16 @@ func Files(options FilesOptions) error {
 		}
 	}
 
-	// List files in the folder.
 	files, err := listFiles(driveService, options.FolderID, "/")
 	if err != nil {
 		return errors.Wrap(err, "listing files failed")
 	}
 
 	if options.SelectionMode {
-		// Select files to download.
-		fileSelectPrompt := &survey.MultiSelect{
-			Message:  "Which files would you like to download?",
-			Options:  files.String(),
-			PageSize: 20,
-		}
-
-		var selected []string
-		err = survey.AskOne(fileSelectPrompt, &selected, survey.WithValidator(survey.Required))
+		files, err = selectFilesToDownload(files)
 		if err != nil {
-			return errors.Wrap(err, "file selection prompt failed")
+			return errors.Wrap(err, "can't select files to download")
 		}
-
-		files = filterSelectedFiles(files, selected)
 	}
 
 	// TODO For every file:
@@ -110,67 +96,4 @@ func checkOutputDir(outputDir string) error {
 		return errors.New("output directory must be a folder")
 	}
 	return nil
-}
-
-func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, error) {
-	var files []*driveFile
-	var nextPageToken string
-	for {
-		q := "trashed = false"
-		if folderID != "" {
-			q = q + fmt.Sprintf(" and '%s' in parents", folderID)
-		}
-
-		filesListCall := driveService.Files.List().
-			PageSize(100).
-			Fields("nextPageToken, files(id, name, size, md5Checksum, mimeType, trashed)").
-			OrderBy("name").
-			Q(q)
-		if nextPageToken != "" {
-			filesListCall.PageToken(nextPageToken)
-		}
-
-		fileList, err := filesListCall.Do()
-		if err != nil {
-			return nil, errors.Wrap(err, "files.list call failed")
-		}
-
-		for _, aFile := range fileList.Files {
-			if aFile.MimeType == "application/vnd.google-apps.folder" {
-				fs, err := listFiles(driveService, aFile.Id, filepath.Join(path, aFile.Name))
-				if err != nil {
-					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", aFile.Id)
-				}
-				files = append(files, fs...)
-				continue
-			}
-
-			if strings.HasPrefix(aFile.MimeType, "application/vnd.google-apps.") {
-				continue // skip Google Docs
-			}
-
-			files = append(files, &driveFile{
-				File: aFile,
-				Path: filepath.Join(path, aFile.Name),
-			})
-		}
-
-		nextPageToken = fileList.NextPageToken
-		if nextPageToken == "" {
-			break
-		}
-	}
-	return files, nil
-}
-
-func filterSelectedFiles(files driveFiles, selected []string) driveFiles {
-	var filtered []*driveFile
-	for _, s := range selected {
-		for _, aFile := range files {
-			if aFile.String() == s {
-				filtered = append(filtered, aFile)
-			}
-		}
-	}
-	return filtered
 }
