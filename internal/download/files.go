@@ -26,8 +26,8 @@ type driveFiles []*driveFile
 
 func (files driveFiles) String() []string {
 	var labels []string
-	for _, aFile := range files {
-		labels = append(labels, aFile.String())
+	for _, file := range files {
+		labels = append(labels, file.String())
 	}
 	return labels
 }
@@ -57,12 +57,12 @@ func Files(options FilesOptions) error {
 
 	// If a resource path is provided, check if it refers to a folder.
 	if options.FolderID != "" {
-		aFile, err := driveService.Files.Get(options.FolderID).Do()
+		file, err := driveService.Files.Get(options.FolderID).Do()
 		if err != nil {
 			return errors.Wrapf(err, "can't read folder data (ID: %s)", options.FolderID)
 		}
 
-		if aFile.MimeType != "application/vnd.google-apps.folder" {
+		if file.MimeType != "application/vnd.google-apps.folder" {
 			return errors.Wrapf(err, "resource is not a folder (ID: %s)", options.FolderID)
 		}
 	}
@@ -79,10 +79,13 @@ func Files(options FilesOptions) error {
 		}
 	}
 
-	// TODO For every file:
-	// TODO 	Check if local file exists in output directory
-	// TODO 	Check MD5 remote vs local file
-	// TODO 	Check if size(local file) < size(remote local)
+	for _, file := range files {
+		state := evaluateFileState(file, options.OutputDir)
+		err := processFile(state)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", errors.Wrapf(err, "processing file \"%s\" failed", state.file.Path))
+		}
+	}
 	return nil
 }
 

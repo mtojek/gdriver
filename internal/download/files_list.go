@@ -32,23 +32,23 @@ func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, 
 			return nil, errors.Wrap(err, "files.list call failed")
 		}
 
-		for _, aFile := range fileList.Files {
-			if aFile.MimeType == "application/vnd.google-apps.folder" {
-				fs, err := listFiles(driveService, aFile.Id, filepath.Join(path, aFile.Name))
+		for _, file := range fileList.Files {
+			if file.MimeType == "application/vnd.google-apps.folder" {
+				fs, err := listFiles(driveService, file.Id, filepath.Join(path, file.Name))
 				if err != nil {
-					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", aFile.Id)
+					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", file.Id)
 				}
 				files = append(files, fs...)
 				continue
 			}
 
-			if strings.HasPrefix(aFile.MimeType, "application/vnd.google-apps.") {
+			if strings.HasPrefix(file.MimeType, "application/vnd.google-apps.") {
 				continue // skip Google Docs
 			}
 
 			files = append(files, &driveFile{
-				File: aFile,
-				Path: filepath.Join(path, aFile.Name),
+				File: file,
+				Path: filepath.Join(path, file.Name),
 			})
 		}
 

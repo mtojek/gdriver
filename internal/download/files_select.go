@@ -26,9 +26,9 @@ func selectFilesToDownload(files driveFiles) (driveFiles, error) {
 func filterSelectedFiles(files driveFiles, selected []string) driveFiles {
 	var filtered []*driveFile
 	for _, s := range selected {
-		for _, aFile := range files {
-			if aFile.String() == s {
-				filtered = append(filtered, aFile)
+		for _, file := range files {
+			if file.String() == s {
+				filtered = append(filtered, file)
 			}
 		}
 	}
