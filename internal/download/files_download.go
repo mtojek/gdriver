@@ -94,7 +94,7 @@ func downloadFile(driveService *drive.Service, file *driveFile, outputDir string
 		}
 
 		if ok, _ := state.valid(); ok {
-			bar.Finish()
+			bar.Set64(state.size)
 			return nil // file is complete and valid
 		}
 		bar.Set64(state.offset())
@@ -158,7 +158,7 @@ func renderBarDescription(file *driveFile) string {
 		description.WriteString(file.Name[:22])
 		description.WriteString("...")
 	} else {
-		description.WriteString(file.Name)
+		description.WriteString(fmt.Sprintf("%-25s", file.Name))
 	}
 
 	description.WriteString(" (MD5: ")
