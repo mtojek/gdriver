@@ -112,7 +112,7 @@ func downloadFile(driveService *drive.Service, state fileState, bar *progressbar
 	}
 
 	// Create base directories
-	basePath := filepath.Base(state.localPath)
+	basePath := filepath.Dir(state.localPath)
 	err = os.MkdirAll(basePath, 0755)
 	if err != nil {
 		return errors.Wrapf(err, "creating base directories failed (path: %s)", basePath)
