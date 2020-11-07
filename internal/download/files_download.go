@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
@@ -17,11 +18,11 @@ type fileState struct {
 	file      *driveFile
 	localPath string
 
-	size int64
+	size        int64
 	md5Checksum string
 }
 
-func (fs *fileState) verify() (bool, error) {
+func (fs *fileState) valid() (bool, error) {
 	if fs.size < fs.file.Size {
 		return false, errors.New("file is not complete")
 	}
@@ -83,22 +84,19 @@ func calculateMd5Checksum(localPath string) (string, error) {
 func downloadFile(driveService *drive.Service, file *driveFile, outputDir string) error {
 	bar := progressbar.DefaultBytes(
 		file.Size,
-		fmt.Sprintf("%s (MD5: %s)", file.Name, file.Md5Checksum),
+		renderBarDescription(file),
 	)
 
 	return retry.Do(func() error {
-		fmt.Println("1")
 		state, err := evaluateFileState(file, filepath.Join(outputDir, file.Path))
 		if err != nil {
 			return errors.Wrap(err, "state evaluation failed")
 		}
-		fmt.Println("2")
 
-		if valid, _ := state.verify(); valid {
+		if ok, _ := state.valid(); ok {
 			bar.Finish()
 			return nil // file is complete and valid
 		}
-		fmt.Println("3")
 		bar.Set64(state.offset())
 
 		err = downloadFileData(driveService, *state, bar)
@@ -106,11 +104,15 @@ func downloadFile(driveService *drive.Service, file *driveFile, outputDir string
 			return errors.Wrap(err, "downloading file data failed")
 		}
 
-		if valid, err := state.verify(); !valid {
+		state, err = evaluateFileState(file, filepath.Join(outputDir, file.Path))
+		if err != nil {
+			return errors.Wrap(err, "state evaluation failed")
+		}
+
+		if ok, err := state.valid(); !ok {
 			return errors.Wrap(err, "file verification failed")
 		}
 
-		bar.Finish()
 		return nil
 	}, retry.Attempts(3))
 }
@@ -131,9 +133,9 @@ func downloadFileData(driveService *drive.Service, state fileState, bar *progres
 	}
 
 	// Open destination file
-	var flags = os.O_CREATE|os.O_WRONLY|os.O_APPEND
+	var flags = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	if state.offset() == 0 {
-		flags = os.O_CREATE|os.O_WRONLY|os.O_TRUNC
+		flags = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
 	}
 
 	f, err := os.OpenFile(state.localPath, flags, 0644)
@@ -148,4 +150,19 @@ func downloadFileData(driveService *drive.Service, state fileState, bar *progres
 		return errors.Wrap(err, "copying buffers failed")
 	}
 	return nil
+}
+
+func renderBarDescription(file *driveFile) string {
+	var description strings.Builder
+	if len(file.Name) > 22 {
+		description.WriteString(file.Name[:22])
+		description.WriteString("...")
+	} else {
+		description.WriteString(file.Name)
+	}
+
+	description.WriteString(" (MD5: ")
+	description.WriteString(file.Md5Checksum)
+	description.WriteByte(')')
+	return description.String()
 }
