@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -52,6 +54,8 @@ func Root() *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "downloading files failed")
 			}
+
+			fmt.Println("Done")
 			return nil
 		},
 	}

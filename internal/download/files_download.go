@@ -17,12 +17,12 @@ type fileState struct {
 	file      *driveFile
 	localPath string
 
-	offset      int64
+	size int64
 	md5Checksum string
 }
 
 func (fs *fileState) verify() (bool, error) {
-	if fs.offset != fs.file.Size {
+	if fs.size < fs.file.Size {
 		return false, errors.New("file is not complete")
 	}
 
@@ -30,6 +30,17 @@ func (fs *fileState) verify() (bool, error) {
 		return false, errors.New("file is corrupted")
 	}
 	return true, nil
+}
+
+func (fs *fileState) offset() int64 {
+	if fs.size > fs.file.Size {
+		return 0 // file is corrupted (too long)
+	}
+
+	if fs.size == fs.file.Size && fs.md5Checksum != fs.file.Md5Checksum {
+		return 0 // file is corrupted
+	}
+	return fs.size
 }
 
 func evaluateFileState(file *driveFile, localPath string) (*fileState, error) {
@@ -46,15 +57,12 @@ func evaluateFileState(file *driveFile, localPath string) (*fileState, error) {
 		return nil, errors.Wrapf(err, "stat file failed (path: %s)", state.localPath)
 	}
 
-	state.offset = fi.Size()
 	state.md5Checksum, err = calculateMd5Checksum(localPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "calculating MD5 checksum failed")
 	}
 
-	if state.md5Checksum != state.file.Md5Checksum {
-		state.offset = 0
-	}
+	state.size = fi.Size()
 	return state, nil
 }
 
@@ -72,26 +80,30 @@ func calculateMd5Checksum(localPath string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func processFile(driveService *drive.Service, file *driveFile, outputDir string) error {
+func downloadFile(driveService *drive.Service, file *driveFile, outputDir string) error {
 	bar := progressbar.DefaultBytes(
 		file.Size,
 		fmt.Sprintf("%s (MD5: %s)", file.Name, file.Md5Checksum),
 	)
 
 	return retry.Do(func() error {
+		fmt.Println("1")
 		state, err := evaluateFileState(file, filepath.Join(outputDir, file.Path))
 		if err != nil {
 			return errors.Wrap(err, "state evaluation failed")
 		}
+		fmt.Println("2")
 
 		if valid, _ := state.verify(); valid {
 			bar.Finish()
 			return nil // file is complete and valid
 		}
+		fmt.Println("3")
+		bar.Set64(state.offset())
 
-		err = downloadFile(driveService, *state, bar)
+		err = downloadFileData(driveService, *state, bar)
 		if err != nil {
-			return errors.Wrap(err, "downloading file failed")
+			return errors.Wrap(err, "downloading file data failed")
 		}
 
 		if valid, err := state.verify(); !valid {
@@ -103,9 +115,9 @@ func processFile(driveService *drive.Service, file *driveFile, outputDir string)
 	}, retry.Attempts(3))
 }
 
-func downloadFile(driveService *drive.Service, state fileState, bar *progressbar.ProgressBar) error {
+func downloadFileData(driveService *drive.Service, state fileState, bar *progressbar.ProgressBar) error {
 	filesGetCall := driveService.Files.Get(state.file.Id)
-	filesGetCall.Header().Add("Range", fmt.Sprintf("bytes=%d-", state.offset))
+	filesGetCall.Header().Add("Range", fmt.Sprintf("bytes=%d-", state.offset()))
 	resp, err := filesGetCall.Download()
 	if err != nil {
 		return errors.Wrap(err, "opening file stream failed")
@@ -119,7 +131,12 @@ func downloadFile(driveService *drive.Service, state fileState, bar *progressbar
 	}
 
 	// Open destination file
-	f, err := os.OpenFile(state.localPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	var flags = os.O_CREATE|os.O_WRONLY|os.O_APPEND
+	if state.offset() == 0 {
+		flags = os.O_CREATE|os.O_WRONLY|os.O_TRUNC
+	}
+
+	f, err := os.OpenFile(state.localPath, flags, 0644)
 	if err != nil {
 		return errors.Wrap(err, "opening destination file failed")
 	}
@@ -128,7 +145,7 @@ func downloadFile(driveService *drive.Service, state fileState, bar *progressbar
 	// Download file data
 	_, err = io.Copy(io.MultiWriter(f, bar), resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "downloading file data failed")
+		return errors.Wrap(err, "copying buffers failed")
 	}
 	return nil
 }

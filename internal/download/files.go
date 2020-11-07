@@ -57,6 +57,8 @@ func Files(options FilesOptions) error {
 
 	// If a resource path is provided, check if it refers to a folder.
 	if options.FolderID != "" {
+		fmt.Printf("Read folder metadata for \"%s\"\n", options.FolderID)
+
 		file, err := driveService.Files.Get(options.FolderID).Do()
 		if err != nil {
 			return errors.Wrapf(err, "can't read folder data (ID: %s)", options.FolderID)
@@ -67,22 +69,25 @@ func Files(options FilesOptions) error {
 		}
 	}
 
+	fmt.Println("List available files")
 	files, err := listFiles(driveService, options.FolderID, "/")
 	if err != nil {
 		return errors.Wrap(err, "listing files failed")
 	}
 
 	if options.SelectionMode {
+		fmt.Println("Select files to download")
 		files, err = selectFilesToDownload(files)
 		if err != nil {
 			return errors.Wrap(err, "can't select files to download")
 		}
 	}
 
+	fmt.Println("Download files")
 	for _, file := range files {
-		err := processFile(driveService, file, options.OutputDir)
+		err := downloadFile(driveService, file, options.OutputDir)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", errors.Wrapf(err, "processing file \"%s\" failed", file.Path))
+			fmt.Fprintf(os.Stderr, "%v\n", errors.Wrapf(err, "downloading file \"%s\" failed", file.Path))
 		}
 	}
 	return nil
