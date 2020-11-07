@@ -7,6 +7,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/pkg/errors v0.8.1
+	github.com/schollz/progressbar/v3 v3.7.0
 	github.com/spf13/cobra v1.1.1
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	google.golang.org/api v0.33.0

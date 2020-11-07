@@ -80,10 +80,9 @@ func Files(options FilesOptions) error {
 	}
 
 	for _, file := range files {
-		state := evaluateFileState(file, options.OutputDir)
-		err := processFile(state)
+		err := processFile(driveService, file, options.OutputDir)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", errors.Wrapf(err, "processing file \"%s\" failed", state.file.Path))
+			fmt.Fprintf(os.Stderr, "%v\n", errors.Wrapf(err, "processing file \"%s\" failed", file.Path))
 		}
 	}
 	return nil
