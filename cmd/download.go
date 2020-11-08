@@ -8,6 +8,7 @@ import (
 
 	"github.com/mtojek/gdriver/internal/auth"
 	"github.com/mtojek/gdriver/internal/download"
+	"github.com/mtojek/gdriver/internal/driveext"
 )
 
 func setupDownloadCommand() *cobra.Command {
@@ -32,7 +33,13 @@ func setupDownloadCommand() *cobra.Command {
 
 			outputDir, _ := cmd.Flags().GetString("output")
 			selectionMode, _ := cmd.Flags().GetBool("select")
-			err := download.Files(download.FilesOptions{
+
+			driveService, err := driveext.NewService()
+			if err != nil {
+				return errors.Wrap(err, "initializing drive service failed")
+			}
+
+			err = download.Files(driveService, download.FilesOptions{
 				FolderID:      folderID,
 				OutputDir:     outputDir,
 				SelectionMode: selectionMode,

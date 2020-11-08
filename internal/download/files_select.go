@@ -3,9 +3,11 @@ package download
 import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
+
+	"github.com/mtojek/gdriver/internal/driveext"
 )
 
-func selectFilesToDownload(files driveFiles) (driveFiles, error) {
+func selectFilesToDownload(files driveext.DriveFiles) (driveext.DriveFiles, error) {
 	fileSelectPrompt := &survey.MultiSelect{
 		Message:  "Which files would you like to download?",
 		Options:  files.String(),
@@ -22,8 +24,8 @@ func selectFilesToDownload(files driveFiles) (driveFiles, error) {
 	return files, nil
 }
 
-func filterSelectedFiles(files driveFiles, selected []string) driveFiles {
-	var filtered []*driveFile
+func filterSelectedFiles(files driveext.DriveFiles, selected []string) driveext.DriveFiles {
+	var filtered []*driveext.DriveFile
 	for _, s := range selected {
 		for _, file := range files {
 			if file.String() == s {

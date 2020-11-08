@@ -1,4 +1,4 @@
-package download
+package driveext
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 	"google.golang.org/api/drive/v3"
 )
 
-func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, error) {
-	var files []*driveFile
+func ListFiles(driveService *drive.Service, folderID, path string) (DriveFiles, error) {
+	var files []*DriveFile
 	var nextPageToken string
 	for {
 		q := "trashed = false"
@@ -34,7 +34,7 @@ func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, 
 
 		for _, file := range fileList.Files {
 			if file.MimeType == "application/vnd.google-apps.folder" {
-				fs, err := listFiles(driveService, file.Id, filepath.Join(path, file.Name))
+				fs, err := ListFiles(driveService, file.Id, filepath.Join(path, file.Name))
 				if err != nil {
 					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", file.Id)
 				}
@@ -46,7 +46,7 @@ func listFiles(driveService *drive.Service, folderID, path string) (driveFiles, 
 				continue // skip Google Docs
 			}
 
-			files = append(files, &driveFile{
+			files = append(files, &DriveFile{
 				File: file,
 				Path: filepath.Join(path, file.Name),
 			})

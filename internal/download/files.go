@@ -1,36 +1,14 @@
 package download
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
 	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/option"
 
-	"github.com/mtojek/gdriver/internal/auth"
+	"github.com/mtojek/gdriver/internal/driveext"
 )
-
-type driveFile struct {
-	Path string
-	*drive.File
-}
-
-func (df *driveFile) String() string {
-	return fmt.Sprintf("%s (%s)", df.Path, humanize.Bytes(uint64(df.Size)))
-}
-
-type driveFiles []*driveFile
-
-func (files driveFiles) String() []string {
-	var labels []string
-	for _, file := range files {
-		labels = append(labels, file.String())
-	}
-	return labels
-}
 
 type FilesOptions struct {
 	FolderID  string
@@ -39,20 +17,10 @@ type FilesOptions struct {
 	SelectionMode bool
 }
 
-func Files(options FilesOptions) error {
+func Files(driveService *drive.Service, options FilesOptions) error {
 	err := checkOutputDir(options.OutputDir)
 	if err != nil {
 		return err
-	}
-
-	oauthClient, err := auth.Client()
-	if err != nil {
-		return errors.Wrap(err, "creating auth client failed")
-	}
-
-	driveService, err := drive.NewService(context.Background(), option.WithHTTPClient(oauthClient))
-	if err != nil {
-		return errors.Wrap(err, "creating drive service failed")
 	}
 
 	// If a resource path is provided, check if it refers to a folder.
@@ -61,7 +29,7 @@ func Files(options FilesOptions) error {
 
 		file, err := driveService.Files.Get(options.FolderID).Do()
 		if err != nil {
-			return errors.Wrapf(err, "can't read folder data (ID: %s)", options.FolderID)
+			return errors.Wrapf(err, "can't read folder metadata (ID: %s)", options.FolderID)
 		}
 
 		if file.MimeType != "application/vnd.google-apps.folder" {
@@ -70,7 +38,7 @@ func Files(options FilesOptions) error {
 	}
 
 	fmt.Println("List available files")
-	files, err := listFiles(driveService, options.FolderID, "/")
+	files, err := driveext.ListFiles(driveService, options.FolderID, "/")
 	if err != nil {
 		return errors.Wrap(err, "listing files failed")
 	}
