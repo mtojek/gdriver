@@ -11,6 +11,7 @@ func setupAuthCommand() *cobra.Command {
 	authCmd := &cobra.Command{
 		Use:          "auth",
 		Short:        "Authenticate Google account",
+		Long:         "Use auth subcommand to authenticate with Google Drive API.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newCredentialsFile, _ := cmd.Flags().GetString("import-credentials")

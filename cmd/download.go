@@ -14,6 +14,7 @@ func setupDownloadCommand() *cobra.Command {
 	downloadCmd := &cobra.Command{
 		Use:          "download [folderID]",
 		Short:        "Download files",
+		Long:         "Use download subcommand to download files from Google Drive.",
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
