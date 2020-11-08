@@ -8,6 +8,7 @@ import (
 
 	"github.com/mtojek/gdriver/internal/auth"
 	"github.com/mtojek/gdriver/internal/check"
+	"github.com/mtojek/gdriver/internal/driveext"
 )
 
 func setupCheckCommand() *cobra.Command {
@@ -31,7 +32,13 @@ func setupCheckCommand() *cobra.Command {
 			}
 
 			targetDir, _ := cmd.Flags().GetString("target")
-			err := check.Files(check.FilesOptions{
+
+			driveService, err := driveext.NewService()
+			if err != nil {
+				return errors.Wrap(err, "initializing drive service failed")
+			}
+
+			err = check.Files(driveService, check.FilesOptions{
 				FolderID:  folderID,
 				TargetDir: targetDir,
 			})

@@ -27,18 +27,14 @@ func Files(driveService *drive.Service, options FilesOptions) error {
 	if options.FolderID != "" {
 		fmt.Printf("Read folder metadata for \"%s\"\n", options.FolderID)
 
-		file, err := driveService.Files.Get(options.FolderID).Do()
+		err := driveext.EnsureFolder(driveService, options.FolderID)
 		if err != nil {
-			return errors.Wrapf(err, "can't read folder metadata (ID: %s)", options.FolderID)
-		}
-
-		if file.MimeType != "application/vnd.google-apps.folder" {
-			return errors.Wrapf(err, "resource is not a folder (ID: %s)", options.FolderID)
+			return err
 		}
 	}
 
 	fmt.Println("List available files")
-	files, err := driveext.ListFiles(driveService, options.FolderID, "/")
+	files, err := driveext.ListFiles(driveService, options.FolderID)
 	if err != nil {
 		return errors.Wrap(err, "listing files failed")
 	}

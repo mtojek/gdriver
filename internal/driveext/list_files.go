@@ -9,7 +9,11 @@ import (
 	"google.golang.org/api/drive/v3"
 )
 
-func ListFiles(driveService *drive.Service, folderID, path string) (DriveFiles, error) {
+func ListFiles(driveService *drive.Service, folderID string) (DriveFiles, error) {
+	return listFilesWithPath(driveService, folderID, "/")
+}
+
+func listFilesWithPath(driveService *drive.Service, folderID, path string) (DriveFiles, error) {
 	var files []*DriveFile
 	var nextPageToken string
 	for {
@@ -34,7 +38,7 @@ func ListFiles(driveService *drive.Service, folderID, path string) (DriveFiles, 
 
 		for _, file := range fileList.Files {
 			if file.MimeType == "application/vnd.google-apps.folder" {
-				fs, err := ListFiles(driveService, file.Id, filepath.Join(path, file.Name))
+				fs, err := listFilesWithPath(driveService, file.Id, filepath.Join(path, file.Name))
 				if err != nil {
 					return nil, errors.Wrapf(err, "listing child folder failed (folderID: %s)", file.Id)
 				}
