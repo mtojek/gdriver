@@ -16,15 +16,16 @@ import (
 )
 
 func downloadFile(driveService *drive.Service, file *driveext.DriveFile, outputDir string) error {
-	bar := progressbar.DefaultBytes(
-		file.Size,
-		renderBarDescription(file),
-	)
-
 	return retry.Do(func() error {
+		bar := progressbar.DefaultBytes(
+			file.Size,
+			renderBarDescription(file),
+		)
+
 		state, err := driveext.EvaluateFileState(file, filepath.Join(outputDir, file.Path))
 		if err != nil {
-			return errors.Wrap(err, "state evaluation failed")
+			fmt.Println(" File state evaluation failed.")
+			return errors.Wrap(err, "file state evaluation failed")
 		}
 
 		bar.Set64(state.Offset())
@@ -34,15 +35,18 @@ func downloadFile(driveService *drive.Service, file *driveext.DriveFile, outputD
 
 		err = downloadFileData(driveService, *state, bar)
 		if err != nil {
+			fmt.Println(" File download failed.")
 			return errors.Wrap(err, "downloading file data failed")
 		}
 
 		state, err = driveext.EvaluateFileState(file, filepath.Join(outputDir, file.Path))
 		if err != nil {
-			return errors.Wrap(err, "state evaluation failed")
+			fmt.Println(" File state evaluation failed.")
+			return errors.Wrap(err, "file state evaluation failed")
 		}
 
 		if ok, err := state.Valid(); !ok {
+			fmt.Println(" File verification failed.")
 			return errors.Wrap(err, "file verification failed")
 		}
 
