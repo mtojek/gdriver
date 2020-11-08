@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mtojek/gdriver/internal/auth"
-	"github.com/mtojek/gdriver/internal/download"
+	"github.com/mtojek/gdriver/internal/check"
 )
 
 func setupCheckCommand() *cobra.Command {
@@ -30,10 +30,10 @@ func setupCheckCommand() *cobra.Command {
 				folderID = args[0]
 			}
 
-			targetPath, _ := cmd.Flags().GetString("target")
-			err := download.Files(download.FilesOptions{
+			targetDir, _ := cmd.Flags().GetString("target")
+			err := check.Files(check.FilesOptions{
 				FolderID:  folderID,
-				OutputDir: targetPath,
+				TargetDir: targetDir,
 			})
 			if err != nil {
 				return errors.Wrap(err, "checking files failed")

@@ -30,11 +30,11 @@ func setupDownloadCommand() *cobra.Command {
 				folderID = args[0]
 			}
 
-			outputPath, _ := cmd.Flags().GetString("output")
+			outputDir, _ := cmd.Flags().GetString("output")
 			selectionMode, _ := cmd.Flags().GetBool("select")
 			err := download.Files(download.FilesOptions{
 				FolderID:      folderID,
-				OutputDir:     outputPath,
+				OutputDir:     outputDir,
 				SelectionMode: selectionMode,
 			})
 			if err != nil {
