@@ -31,6 +31,22 @@ Run the `help` command and see available commands:
 
 ```bash
 gdriver help
+
+Use gdriver to download large files from Google Drive.
+
+Usage:
+  gdriver [command]
+
+Available Commands:
+  auth        Authenticate Google account
+  check       Check files
+  download    Download files
+  help        Help about any command
+
+Flags:
+  -h, --help   help for gdriver
+
+Use "gdriver [command] --help" for more information about a command.
 ```
 
 ### Run the application for the first time
