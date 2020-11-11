@@ -69,3 +69,7 @@ gdriver download Ax9h4tAyI53ZhqMSoa2opZ6o6m21OUyww --select --output tmp
 ## Releases
 
 Find latest revisions on the [Releases](https://github.com/mtojek/gdriver/releases) page.
+
+## License
+
+Apache License
