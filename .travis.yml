@@ -1,19 +1,14 @@
 language: go
-
 dist: xenial
-
 os:
-  - linux
-
-env:
-  global:
-    secure: "gNytRrWKfTPLFwS9m2qxBxE3Br6npA6eEbfDUDbasmE1xd4zBZGbT7gPcr2B5+wFfNiYtnnclNshTypmEa6LPZDJyrpF4YARHI7sz7G3pSXDM6ntiEWwRQ2+gkwssJoRXBTIThZ/fSR2OdZkzDyDbxwFIFrKetX3BbVjPXJx65t087YMmwa2fdgy4VGlxQgSL+L2vPP9zEhK+iOa48+HFdo8EfbBQrB3LEJYoFFa5dJ2KkGOrjz/7TxqL/02lDZ3rGCz+24M2klcNVZLBBiFzRXUchdAOanf9oq1ZyvECQnWcMtNtMpeAE4EGmJy7+CqKnF+EhbrIgCM738uCR5If74dQqrioJSW7Vw6SMnBepkDyn6MGV+oPVTMvnv7U8vKBwYo+Qi/W404GuUf+rNqtwi+h9+H+SYw55h3Q3/53T3h2cjwXBCcAvLBumVnyDrr5btE31HfcZv0GLsT5eoEuw1g9UqJ/ajPwq99HqDEU/aJOuWYAbRrs8VgUMqWhX/4f3AJJ1b8LbttdSOtWphuevEyRG1sZRdolyX4KOyDxUOwU2hMjRqaRUBKbAZEsT3CJoFIEVMK4E9LhFh84uaPoUtXU+8Z6MmMQIjPbSWHWBN5Wqwq6rf7ZBvGyTGs0Lw/BZcMC62yNseAcZrX/IcqBlLVHy0K+0awTgVTdt/6Z2Y="
-
+- linux
 go:
-  - 1.15
-
+- 1.15
 deploy:
   provider: script
   script: curl -sL https://git.io/goreleaser | bash
   on:
     tags: true
+env:
+  global:
+    secure: Iv9tcF2W4QPA3j1OHQRVQkLUz5r3jgbD8uxhClmEWLNABSBeQSNrEsI42ZSFgeNG7UIiy8gR2mtN3JRy0evvXyAIQRVHFuNf4bDcIg54e9NDdcq/qZc/4FG31PZ8P95h2hqREfYeRNj2ydujrQYLlboUM1XPscWsIrkewbxhAdIhfirWNMLhZ3+XnQEu0dP5ZEGqRUo0k0zRxEvIqofaCwUTdA/xVROfmJOijAy9C+iF0SQHax7ri/yHlvoc1b4rNjzlAtLBNtGYsee6laLa6uVm+sO6Ge5OcUJC1lYp1gnbfC/wXKuS/Fruppdbmz337o+nUUZsH4bXDF2DqNGaHGg9Lgb5+fpvT4o0Il3ivaupPEhTDwr52gxZ0JeYK7E35Uec9QSF7k/Z+fczLsrlJKr2fsmr+/5grwOelnWkDaGiXn8H56NM9ztUd/1w5JTe7a8DPxk1Szap27pO7qVO/9kf40oR9BaPOv2evmMW61dWJEYKCudR5jxVqPL7bBrKMG/6VcBVru1sbuzUGyJ+w+PN2hXVmYMl3Om9WJVO7dwSfVlVXPUDV5txnIqSCBBUz/9eQoAM0aT/LyNGD+qIr5013NUPFgp40ocJIDi5hMWIXQgatowOSJPnPiYUtArP7/36V8xITy3b6LFuZm+I42jZ0H3scCf2YxPYYNUFyKw=
