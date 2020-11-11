@@ -6,14 +6,14 @@ os:
   - linux
 
 env:
-  secure: "gNytRrWKfTPLFwS9m2qxBxE3Br6npA6eEbfDUDbasmE1xd4zBZGbT7gPcr2B5+wFfNiYtnnclNshTypmEa6LPZDJyrpF4YARHI7sz7G3pSXDM6ntiEWwRQ2+gkwssJoRXBTIThZ/fSR2OdZkzDyDbxwFIFrKetX3BbVjPXJx65t087YMmwa2fdgy4VGlxQgSL+L2vPP9zEhK+iOa48+HFdo8EfbBQrB3LEJYoFFa5dJ2KkGOrjz/7TxqL/02lDZ3rGCz+24M2klcNVZLBBiFzRXUchdAOanf9oq1ZyvECQnWcMtNtMpeAE4EGmJy7+CqKnF+EhbrIgCM738uCR5If74dQqrioJSW7Vw6SMnBepkDyn6MGV+oPVTMvnv7U8vKBwYo+Qi/W404GuUf+rNqtwi+h9+H+SYw55h3Q3/53T3h2cjwXBCcAvLBumVnyDrr5btE31HfcZv0GLsT5eoEuw1g9UqJ/ajPwq99HqDEU/aJOuWYAbRrs8VgUMqWhX/4f3AJJ1b8LbttdSOtWphuevEyRG1sZRdolyX4KOyDxUOwU2hMjRqaRUBKbAZEsT3CJoFIEVMK4E9LhFh84uaPoUtXU+8Z6MmMQIjPbSWHWBN5Wqwq6rf7ZBvGyTGs0Lw/BZcMC62yNseAcZrX/IcqBlLVHy0K+0awTgVTdt/6Z2Y="
+  global:
+    secure: "gNytRrWKfTPLFwS9m2qxBxE3Br6npA6eEbfDUDbasmE1xd4zBZGbT7gPcr2B5+wFfNiYtnnclNshTypmEa6LPZDJyrpF4YARHI7sz7G3pSXDM6ntiEWwRQ2+gkwssJoRXBTIThZ/fSR2OdZkzDyDbxwFIFrKetX3BbVjPXJx65t087YMmwa2fdgy4VGlxQgSL+L2vPP9zEhK+iOa48+HFdo8EfbBQrB3LEJYoFFa5dJ2KkGOrjz/7TxqL/02lDZ3rGCz+24M2klcNVZLBBiFzRXUchdAOanf9oq1ZyvECQnWcMtNtMpeAE4EGmJy7+CqKnF+EhbrIgCM738uCR5If74dQqrioJSW7Vw6SMnBepkDyn6MGV+oPVTMvnv7U8vKBwYo+Qi/W404GuUf+rNqtwi+h9+H+SYw55h3Q3/53T3h2cjwXBCcAvLBumVnyDrr5btE31HfcZv0GLsT5eoEuw1g9UqJ/ajPwq99HqDEU/aJOuWYAbRrs8VgUMqWhX/4f3AJJ1b8LbttdSOtWphuevEyRG1sZRdolyX4KOyDxUOwU2hMjRqaRUBKbAZEsT3CJoFIEVMK4E9LhFh84uaPoUtXU+8Z6MmMQIjPbSWHWBN5Wqwq6rf7ZBvGyTGs0Lw/BZcMC62yNseAcZrX/IcqBlLVHy0K+0awTgVTdt/6Z2Y="
 
 go:
   - 1.15
 
 deploy:
   provider: script
-  skip_cleanup: true
   script: curl -sL https://git.io/goreleaser | bash
   on:
     tags: true
