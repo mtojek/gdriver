@@ -1,9 +1,9 @@
 # gdriver
 
+[![Build Status](https://travis-ci.com/mtojek/gdriver.svg?branch=main)](https://travis-ci.com/mtojek/gdriver)
+
 `gdriver` is a command-line tool, written in Go, used for downloading large personal files from Google Drive (API v3).
 The tool provides file selection, integrity checks, transfer retries and requires a user-defined Cloud Platform project. 
-
-[![Build Status](https://travis-ci.com/mtojek/gdriver.svg?branch=main)](https://travis-ci.com/mtojek/gdriver)
 
 ## Features
 
