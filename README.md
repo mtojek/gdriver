@@ -5,7 +5,7 @@
 `gdriver` is a command-line tool, written in Go, used for downloading large personal files from Google Drive (API v3).
 The tool provides file selection, integrity checks, transfer retries and requires a user-defined Cloud Platform project. 
 
-Click on the image to open a screencast:
+_Click on the image to open a screencast:_
 
 [![asciicast](https://asciinema.org/a/372715.png)](https://asciinema.org/a/372715)
 
