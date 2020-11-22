@@ -7,7 +7,7 @@ The tool provides file selection, integrity checks, transfer retries and require
 
 _Click on the image to open a screencast:_
 
-[![asciicast](https://asciinema.org/a/372715.png)](https://asciinema.org/a/372715)
+[![asciicast](https://asciinema.org/a/372715.svg)](https://asciinema.org/a/372715)
 
 ## Features
 
