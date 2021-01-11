@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/dustin/go-humanize"
+	"github.com/pkg/errors"
 )
 
 type LocalFile struct {
 	Name string
 	Path string
 	Size int64
+	Md5Checksum string
 }
 
 func (lf *LocalFile) String() string {
@@ -24,4 +26,15 @@ func (files LocalFiles) String() []string {
 		labels = append(labels, file.String())
 	}
 	return labels
+}
+
+func (files LocalFiles) CalculateMd5Checksums() error {
+	var err error
+	for _, f := range files {
+		f.Md5Checksum, err = Md5Checksum(f.Path)
+		if err != nil {
+			return errors.Wrapf(err, "calculating MD5 checksum failed (path: %s)", f.Path)
+		}
+	}
+	return nil
 }

@@ -53,6 +53,8 @@ func Files(driveService *drive.Service, options FilesOptions) error {
 		}
 	}
 
+	files.CalculateMd5Checksums()
+
 	fmt.Println("Upload files")
 	for _, file := range files {
 		err := uploadFile(driveService, file, options.FolderID)

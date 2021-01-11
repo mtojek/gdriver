@@ -16,7 +16,7 @@ func ListFiles(root string) (LocalFiles, error) {
 
 		files = append(files, &LocalFile{
 			Name: info.Name(),
-			Path: filepath.Join("/", path),
+			Path: path,
 			Size: info.Size(),
 		})
 		return nil
