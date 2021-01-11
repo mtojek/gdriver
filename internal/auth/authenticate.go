@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/drive/v3"
 )
 
-func Authenticate(newCredentialsFile string) error {
+func Authenticate(newCredentialsFile string, readOnlyScope bool) error {
 	if newCredentialsFile != "" {
 		err := writeCredentialsFile(newCredentialsFile)
 		if err != nil {
@@ -19,7 +19,7 @@ func Authenticate(newCredentialsFile string) error {
 		}
 	}
 
-	config, err := clientConfig()
+	config, err := clientConfig(readOnlyScope)
 	if err != nil {
 		return errors.Wrap(err, "reading client config failed")
 	}
@@ -54,7 +54,7 @@ func Client() (*http.Client, error) {
 		return nil, errors.Wrap(err, "reading token file failed")
 	}
 
-	c, err := clientConfig()
+	c, err := clientConfig(false)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating client config failed")
 	}
@@ -69,13 +69,17 @@ func Verify() error {
 	return nil
 }
 
-func clientConfig() (*oauth2.Config, error) {
+func clientConfig(readOnlyScope bool) (*oauth2.Config, error) {
 	credentialsBody, err := readCredentialsFile()
 	if err != nil {
 		return nil, errors.Wrap(err, "reading credentials file filed")
 	}
 
-	config, err := google.ConfigFromJSON(credentialsBody, drive.DriveReadonlyScope)
+	scope := drive.DriveScope
+	if readOnlyScope {
+		scope = drive.DriveReadonlyScope
+	}
+	config, err := google.ConfigFromJSON(credentialsBody, scope)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing config file failed")
 	}

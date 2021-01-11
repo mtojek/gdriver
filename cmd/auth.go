@@ -15,7 +15,8 @@ func setupAuthCommand() *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newCredentialsFile, _ := cmd.Flags().GetString("import-credentials")
-			err := auth.Authenticate(newCredentialsFile)
+			readOnlyScope, _ := cmd.Flags().GetBool("read-only")
+			err := auth.Authenticate(newCredentialsFile, readOnlyScope)
 			if err != nil {
 				return errors.Wrap(err, "authentication failed")
 			}
@@ -23,5 +24,6 @@ func setupAuthCommand() *cobra.Command {
 		},
 	}
 	authCmd.Flags().String("import-credentials", "", "Client credentials file (for Google Drive API)")
+	authCmd.Flags().Bool("read-only", true, "Read-only Drive scope")
 	return authCmd
 }
