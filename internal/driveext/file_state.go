@@ -1,13 +1,13 @@
 package driveext
 
 import (
-	"crypto/md5"
 	"fmt"
-	"github.com/dustin/go-humanize"
-	"io"
 	"os"
 
+	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
+
+	"github.com/mtojek/gdriver/internal/osext"
 )
 
 type FileState struct {
@@ -65,25 +65,11 @@ func EvaluateFileState(file *DriveFile, localPath string) (*FileState, error) {
 		return nil, errors.Wrapf(err, "stat file failed (path: %s)", state.LocalPath)
 	}
 
-	state.md5Checksum, err = calculateMd5Checksum(localPath)
+	state.md5Checksum, err = osext.Md5Checksum(localPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "calculating MD5 checksum failed")
 	}
 
 	state.size = fi.Size()
 	return state, nil
-}
-
-func calculateMd5Checksum(localPath string) (string, error) {
-	f, err := os.Open(localPath)
-	if err != nil {
-		return "", errors.Wrapf(err, "can't open file (path: %s)", localPath)
-	}
-
-	h := md5.New()
-	_, err = io.Copy(h, f)
-	if err != nil {
-		return "", errors.Wrap(err, "copying buffer failed")
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
