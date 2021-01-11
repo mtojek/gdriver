@@ -1,11 +1,19 @@
 package osext
 
+import (
+	"fmt"
+
+	"github.com/dustin/go-humanize"
+)
+
 type LocalFile struct {
+	Name string
 	Path string
+	Size int64
 }
 
 func (lf *LocalFile) String() string {
-	return "TODO"
+	return fmt.Sprintf("%s (%s)", lf.Path, humanize.Bytes(uint64(lf.Size)))
 }
 
 type LocalFiles []*LocalFile
