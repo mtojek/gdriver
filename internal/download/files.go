@@ -8,7 +8,6 @@ import (
 	"google.golang.org/api/drive/v3"
 
 	"github.com/mtojek/gdriver/internal/driveext"
-	"github.com/mtojek/gdriver/internal/selector"
 )
 
 type FilesOptions struct {
@@ -40,9 +39,14 @@ func Files(driveService *drive.Service, options FilesOptions) error {
 		return errors.Wrap(err, "listing files failed")
 	}
 
+	if len(files) == 0 {
+		fmt.Println("Source Google Drive folder is empty")
+		return nil
+	}
+
 	if options.SelectionMode {
 		fmt.Println("Select files to download")
-		files, err = selector.SelectFiles(files, "download")
+		files, err = selectFiles(files)
 		if err != nil {
 			return errors.Wrap(err, "can't select files to download")
 		}

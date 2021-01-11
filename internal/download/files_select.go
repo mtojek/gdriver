@@ -1,16 +1,15 @@
-package selector
+package download
 
 import (
-	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 
 	"github.com/mtojek/gdriver/internal/driveext"
 )
 
-func SelectFiles(files driveext.DriveFiles, action string) (driveext.DriveFiles, error) {
+func selectFiles(files driveext.DriveFiles) (driveext.DriveFiles, error) {
 	fileSelectPrompt := &survey.MultiSelect{
-		Message:  fmt.Sprintf("Which files would you like to %s?", action),
+		Message:  "Which files would you like to download",
 		Options:  files.String(),
 		PageSize: 20,
 	}
