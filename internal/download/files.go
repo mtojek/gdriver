@@ -8,6 +8,7 @@ import (
 	"google.golang.org/api/drive/v3"
 
 	"github.com/mtojek/gdriver/internal/driveext"
+	"github.com/mtojek/gdriver/internal/selector"
 )
 
 type FilesOptions struct {
@@ -41,7 +42,7 @@ func Files(driveService *drive.Service, options FilesOptions) error {
 
 	if options.SelectionMode {
 		fmt.Println("Select files to download")
-		files, err = selectFilesToDownload(files)
+		files, err = selector.SelectFiles(files, "download")
 		if err != nil {
 			return errors.Wrap(err, "can't select files to download")
 		}
