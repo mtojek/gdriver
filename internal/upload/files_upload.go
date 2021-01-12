@@ -3,6 +3,7 @@ package upload
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/avast/retry-go"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/mtojek/gdriver/internal/osext"
 )
+
+var errResourceNotFound = errors.New("resource not found")
 
 func uploadFile(driveService *drive.Service, file *osext.LocalFile, folderID string) error {
 	return retry.Do(func() error {
@@ -48,23 +51,49 @@ func uploadFile(driveService *drive.Service, file *osext.LocalFile, folderID str
 }
 
 func mkdirAll(driveService *drive.Service, file *osext.LocalFile, folderID string) (string, error) {
-	return "TODO", nil // TODO
+	parentID := folderID
+	basePath := filepath.Dir(file.Path)
+	for {
+		if basePath == "." {
+			break
+		}
+
+		first := firstDir(basePath)
+		remoteResource, err := getSingleFile(driveService, first, parentID)
+		if err != nil && err != errResourceNotFound {
+			return "", errors.Wrapf(err, "can't get file (name: %s, parentID: %s)", first, parentID)
+		}
+		if err == errResourceNotFound {
+			remoteResource, err = createFolder(driveService, first, parentID)
+			if err != nil {
+				return "", errors.Wrapf(err, "can't create folder (name: %s, parentID: %s)", first, parentID)
+			}
+		}
+
+		if remoteResource.MimeType != "application/vnd.google-apps.folder" {
+			return "", fmt.Errorf("folder expected, but found file (ID: %s, name: %s)", remoteResource.Id,
+				remoteResource.Name)
+		}
+		parentID = remoteResource.Id
+
+		basePath, err = filepath.Rel(first, basePath)
+		if err != nil {
+			return "", errors.Wrap(err, "filepath.Rel failed")
+		}
+	}
+	return parentID, nil
 }
 
-func verifyFileIntegrity(driveService *drive.Service, localFile *osext.LocalFile, folderID string) error {
-	q := fmt.Sprintf("trashed = false and '%s' in parents", folderID)
-	files, err := driveService.Files.List().
-		Fields("files(id, name, size, md5Checksum, mimeType, trashed)").
-		Q(q).
-		Do()
-	if err != nil {
-		return errors.Wrap(err, "files.list call failed")
-	}
-	if len(files.Files) != 1 {
-		return fmt.Errorf("expected single item, got: %d", len(files.Files))
-	}
+func firstDir(path string) string {
+	i := strings.Index(path, "/")
+	return path[:i]
+}
 
-	remoteFile := files.Files[0]
+func verifyFileIntegrity(driveService *drive.Service, localFile *osext.LocalFile, parentID string) error {
+	remoteFile, err := getSingleFile(driveService, localFile.Name, parentID)
+	if err != nil {
+		return errors.Wrapf(err, "can't get file (name: %s, parentID: %s)", localFile.Name, parentID)
+	}
 
 	if localFile.Size != remoteFile.Size {
 		return fmt.Errorf("remote file has different size (expected: %d, actual: %d",
@@ -76,6 +105,38 @@ func verifyFileIntegrity(driveService *drive.Service, localFile *osext.LocalFile
 			localFile.Md5Checksum, remoteFile.Md5Checksum)
 	}
 	return nil
+}
+
+func getSingleFile(driveService *drive.Service, name, parentID string) (*drive.File, error) {
+	files, err := driveService.Files.List().
+		Fields("files(id, name, size, md5Checksum, mimeType, trashed)").
+		Q(fmt.Sprintf("trashed = false and '%s' in parents and name = '%s'", parentID, name)).
+		Do()
+	if err != nil {
+		return nil, errors.Wrap(err, "files.list call failed")
+	}
+	if len(files.Files) == 0 {
+		return nil, errResourceNotFound
+	}
+	if len(files.Files) != 1 {
+		return nil, fmt.Errorf("expected single item, got: %d", len(files.Files))
+	}
+	return files.Files[0], nil
+}
+
+func createFolder(driveService *drive.Service, name, folderID string) (*drive.File, error) {
+	resource, err := driveService.Files.
+		Create(&drive.File{
+			Name:     name,
+			Parents:  []string{folderID},
+			MimeType: "application/vnd.google-apps.folder",
+		}).
+		Fields("id", "name", "mimeType").
+		Do()
+	if err != nil {
+		return nil, errors.Wrap(err, "files.create failed")
+	}
+	return resource, nil
 }
 
 func uploadFileData(driveService *drive.Service, file *osext.LocalFile, parentID string, bar *progressbar.ProgressBar) error {
