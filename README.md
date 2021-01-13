@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/mtojek/gdriver.svg?branch=main)](https://travis-ci.com/mtojek/gdriver)
 
-`gdriver` is a command-line tool, written in Go, used for downloading large personal files from Google Drive (API v3).
+`gdriver` is a command-line tool, written in Go, used for uploading and downloading large personal files from Google Drive (API v3).
 The tool provides file selection, integrity checks, transfer retries and requires a user-defined Cloud Platform project. 
 
 _Click on the image to open a screencast:_
@@ -36,9 +36,7 @@ and unpack it later (e.g `tar xvzf gdriver_X.Y.Z_linux_amd64.tar.gz`).
 Run the `help` command to see available commands:
 
 ```bash
-gdriver help
-
-Use gdriver to download large files from Google Drive.
+Use gdriver to download and upload large files to Google Drive.
 
 Usage:
   gdriver [command]
@@ -48,6 +46,7 @@ Available Commands:
   check       Check files
   download    Download files
   help        Help about any command
+  upload      Upload files
 
 Flags:
   -h, --help   help for gdriver
@@ -63,8 +62,7 @@ yet or enabled the Drive API, follow the [Quickstart](https://developers.google.
 Hints:
 * Use a meaningful project name as it will be presented as title in the Google authentication form.
 * Select `Desktop application` type for the OAuth client.
-* There were issues reported in the past with downloading and saving the credentials file in Firefox. In case of facing a similar issue,
-please try to use Google Chrome.
+* There were issues reported in the past with downloading and saving the credentials file in Firefox. In case of facing a similar issue, please try to use Google Chrome.
 
 Once you create the project, remember to download related login credentials.
 
@@ -80,9 +78,7 @@ You should be good to go now. Try to download first files using the `gdriver dow
 gdriver download <folderID> --select --output tmp
 ```
 
-The `folderID` is the ID of a Drive folder (e.g. `Ax9h4tAyI53ZhqMSoa2opZ6o6m21OUyww`). The value can be easily copied from the
-URL bar in the web browser. Open the directory in the [Google Drive](https://drive.google.com/) console and pick
-the `folderID` part from the URL (e.g. `https://drive.google.com/drive/u/0/folders/Ax9h4tAyI53ZhqMSoa2opZ6o6m21OUyww`).
+The `folderID` is the ID of a Drive folder (e.g. `Ax9h4tAyI53ZhqMSoa2opZ6o6m21OUyww`). The value can be easily copied from the URL bar in the web browser. Open the directory in the [Google Drive](https://drive.google.com/) console and pick the `folderID` part from the URL (e.g. `https://drive.google.com/drive/u/0/folders/Ax9h4tAyI53ZhqMSoa2opZ6o6m21OUyww`).
 
 ## Releases
 
