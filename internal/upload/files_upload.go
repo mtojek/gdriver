@@ -42,9 +42,9 @@ func uploadFile(driveService *drive.Service, file *osext.LocalFile, folderID str
 		}
 
 		err = verifyFileIntegrity(driveService, file, parentID)
-		if err == nil {
+		if err != nil {
 			fmt.Println(" File verification failed")
-			return errors.WithMessage(err, "remote file verification failed")
+			return errors.Wrap(err, "remote file verification failed")
 		}
 		return nil
 	}, retry.Attempts(3))
@@ -81,11 +81,18 @@ func mkdirAll(driveService *drive.Service, file *osext.LocalFile, folderID strin
 			return "", errors.Wrap(err, "filepath.Rel failed")
 		}
 	}
+
+	if parentID == "" {
+		return "root", nil
+	}
 	return parentID, nil
 }
 
 func firstDir(path string) string {
 	i := strings.Index(path, "/")
+	if i == -1 {
+		return path
+	}
 	return path[:i]
 }
 
@@ -118,17 +125,14 @@ func getSingleFile(driveService *drive.Service, name, parentID string) (*drive.F
 	if len(files.Files) == 0 {
 		return nil, errResourceNotFound
 	}
-	if len(files.Files) != 1 {
-		return nil, fmt.Errorf("expected single item, got: %d", len(files.Files))
-	}
 	return files.Files[0], nil
 }
 
-func createFolder(driveService *drive.Service, name, folderID string) (*drive.File, error) {
+func createFolder(driveService *drive.Service, name, parentID string) (*drive.File, error) {
 	resource, err := driveService.Files.
 		Create(&drive.File{
 			Name:     name,
-			Parents:  []string{folderID},
+			Parents:  []string{parentID},
 			MimeType: "application/vnd.google-apps.folder",
 		}).
 		Fields("id", "name", "mimeType").
@@ -146,6 +150,7 @@ func uploadFileData(driveService *drive.Service, file *osext.LocalFile, parentID
 	}
 	defer fd.Close()
 
+	bar.Set64(0)
 	_, err = driveService.Files.
 		Create(&drive.File{
 			Name:    file.Name,
@@ -160,6 +165,7 @@ func uploadFileData(driveService *drive.Service, file *osext.LocalFile, parentID
 	if err != nil {
 		return errors.Wrap(err, "files.create failed")
 	}
+	bar.Finish()
 	return nil
 }
 

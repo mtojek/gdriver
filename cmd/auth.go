@@ -24,6 +24,6 @@ func setupAuthCommand() *cobra.Command {
 		},
 	}
 	authCmd.Flags().String("import-credentials", "", "Client credentials file (for Google Drive API)")
-	authCmd.Flags().Bool("read-only", true, "Read-only Drive scope")
+	authCmd.Flags().Bool("read-only", false, "Read-only Drive scope")
 	return authCmd
 }
