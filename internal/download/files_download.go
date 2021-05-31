@@ -61,6 +61,7 @@ func downloadFileData(driveService *drive.Service, state driveext.FileState, bar
 	if err != nil {
 		return errors.Wrap(err, "opening file stream failed")
 	}
+	defer resp.Body.Close()
 
 	// Create base directories
 	basePath := filepath.Dir(state.LocalPath)
